@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Services from './pages/Services';
@@ -12,8 +13,27 @@ import VendorDashboard from './pages/dashboards/VendorDashboard';
 import AdminDashboard from './pages/dashboards/AdminDashboard';
 import CustomerTracking from './pages/tracking/CustomerTracking';
 import VendorTracking from './pages/tracking/VendorTracking';
+import { useAuth } from './store/authStore';
+import { useDataStore } from './store/dataStore';
 
 function App() {
+  const restoreSession = useAuth((state) => state.restoreSession);
+  const loadMarketplace = useDataStore((state) => state.loadMarketplace);
+  const loadBookings = useDataStore((state) => state.loadBookings);
+  const startRealtime = useDataStore((state) => state.startRealtime);
+  const stopRealtime = useDataStore((state) => state.stopRealtime);
+
+  useEffect(() => {
+    void loadMarketplace();
+    void restoreSession().then((user) => {
+      if (user) {
+        startRealtime();
+        void loadBookings();
+      }
+    });
+    return stopRealtime;
+  }, [loadBookings, loadMarketplace, restoreSession, startRealtime, stopRealtime]);
+
   return (
     <BrowserRouter>
       <Routes>

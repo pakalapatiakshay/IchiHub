@@ -71,13 +71,13 @@ export default function BookService() {
     setShowLocationPicker(false);
   };
 
-  const handleBooking = (e: React.FormEvent) => {
+  const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalLat = bookingLat || customerLocation?.lat || DEFAULT_LAT;
     const finalLng = bookingLng || customerLocation?.lng || DEFAULT_LNG;
     const finalAddress = bookingAddress || `${finalLat.toFixed(4)}, ${finalLng.toFixed(4)}`;
 
-    addBooking({
+    await addBooking({
       id: Math.random().toString(36).substr(2, 9),
       customer_id: user.id,
       vendor_id: provider.id,

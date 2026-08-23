@@ -156,8 +156,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* HOW IT WORKS */}
+      <section className="py-20 md:py-24 bg-brand-light relative overflow-hidden">
+        {/* Subtle background element */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-brand-accent/[0.03] to-transparent pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="section-label justify-center">Simple Process</span>
+            <h2 className="section-title">How IchiHub Works</h2>
+            <p className="section-desc text-center">Get your tasks done in three simple steps. We've made finding and booking local professionals effortless.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
+            {/* Connection Line (Desktop only) */}
+            <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-brand-border/60 z-0">
+              <div className="absolute inset-0 bg-brand-accent/30 origin-left animate-pulse-soft"></div>
+            </div>
+
+            {[
+              { 
+                step: '01',
+                title: 'Search & Compare',
+                desc: 'Enter your location and the service you need. Compare top-rated local professionals instantly.',
+                icon: Search
+              },
+              {
+                step: '02',
+                title: 'Book Instantly',
+                desc: 'Choose a provider that fits your schedule and budget. Book them with a single click.',
+                icon: Zap
+              },
+              {
+                step: '03',
+                title: 'Track & Pay',
+                desc: 'Track their arrival in real-time. Pay securely only after the job is completed to your satisfaction.',
+                icon: MapPin
+              }
+            ].map((item, i) => (
+              <div key={i} className="relative z-10 flex flex-col items-center text-center group">
+                <div className="w-24 h-24 rounded-full bg-white shadow-float flex items-center justify-center mb-6 relative group-hover:-translate-y-2 transition-transform duration-300 ease-smooth border border-brand-border/50">
+                  <div className="absolute -inset-1 bg-gradient-to-br from-brand-accent/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                  <item.icon size={32} className="text-brand-accent relative z-10" />
+                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-brand-dark text-white flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm">
+                    {item.step}
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-brand-dark mb-3">{item.title}</h3>
+                <p className="text-gray-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 3. SERVICE CATEGORIES */}
-      <section className="py-20 md:py-24 bg-brand-light">
+      <section className="py-20 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="mb-12">
             <span className="section-label">What do you need?</span>

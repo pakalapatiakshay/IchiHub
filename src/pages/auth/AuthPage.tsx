@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, Role } from '../../store/authStore';
+import { useDataStore } from '../../store/dataStore';
 import Logo from '../../components/layout/Logo';
 
 interface AuthPageProps {
@@ -10,7 +11,9 @@ interface AuthPageProps {
 
 export default function AuthPage({ role, type }: AuthPageProps) {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { authenticate } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -19,21 +22,24 @@ export default function AuthPage({ role, type }: AuthPageProps) {
     phone: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login/register
-    login({
-      id: Math.random().toString(36).substr(2, 9),
-      role: role,
-      name: type === 'register' ? formData.name : `${role} User`,
-      email: formData.email,
-      phone: formData.phone || '9876543210'
-    });
+    setError(null);
+    setSubmitting(true);
+    try {
+      await authenticate({ ...formData, role, mode: type });
+      void useDataStore.getState().loadMarketplace();
+      void useDataStore.getState().loadBookings();
+      useDataStore.getState().startRealtime();
 
-    // Redirect based on role
-    if (role === 'customer') navigate('/customer/dashboard');
-    else if (role === 'vendor') navigate('/vendor/dashboard');
-    else navigate('/admin/dashboard');
+      if (role === 'customer') navigate('/customer/dashboard');
+      else if (role === 'vendor') navigate('/vendor/dashboard');
+      else navigate('/admin/dashboard');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to sign in. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const title = type === 'login' ? `Login as ${role}` : `Register as ${role}`;
@@ -95,31 +101,35 @@ export default function AuthPage({ role, type }: AuthPageProps) {
               />
             </div>
 
+            {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
+
             <div className="pt-1">
-              <button type="submit" className="btn-primary w-full btn-lg">
-                {type === 'login' ? 'Sign In' : 'Create Account'}
+              <button type="submit" disabled={submitting} className="btn-primary w-full btn-lg disabled:opacity-60">
+                {submitting ? 'Please wait…' : type === 'login' ? 'Sign In' : 'Create Account'}
               </button>
             </div>
           </form>
 
-          <div className="mt-7">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-brand-border" />
+          {role !== 'admin' && (
+            <div className="mt-7">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-brand-border" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-3 bg-brand-card text-gray-400 font-medium">{oppText}</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-brand-card text-gray-400 font-medium">{oppText}</span>
+              <div className="mt-5 text-center">
+                <Link
+                  to={`/${role}/${oppType}`}
+                  className="text-sm font-semibold text-brand-accent hover:text-brand-accentHover transition-colors duration-200"
+                >
+                  {type === 'login' ? 'Register here' : 'Login here'}
+                </Link>
               </div>
             </div>
-            <div className="mt-5 text-center">
-              <Link
-                to={`/${role}/${oppType}`}
-                className="text-sm font-semibold text-brand-accent hover:text-brand-accentHover transition-colors duration-200"
-              >
-                {type === 'login' ? 'Register here' : 'Login here'}
-              </Link>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

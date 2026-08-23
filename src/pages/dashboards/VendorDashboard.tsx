@@ -3,12 +3,21 @@ import { useDataStore } from '../../store/dataStore';
 import { useToastStore } from '../../store/toastStore';
 import { LogOut, LayoutDashboard, Briefcase, IndianRupee, Bell, AlertTriangle, Navigation, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { api } from '../../lib/api';
+
+interface VendorPerformance { netEarnings: number; rating: number; completedJobs: number; acceptanceRate: number; completionRate: number; }
 
 export default function VendorDashboard() {
   const { user, logout } = useAuth();
   const { vendors, bookings, updateBookingStatus } = useDataStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
+  const [performance, setPerformance] = useState<VendorPerformance | null>(null);
+
+  useEffect(() => {
+    api<{ performance: VendorPerformance }>('/vendors/me/performance').then((response) => setPerformance(response.performance)).catch(() => setPerformance(null));
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -124,7 +133,7 @@ export default function VendorDashboard() {
                   <IndianRupee size={16} />
                 </div>
               </div>
-              <div className="text-2xl font-bold text-brand-dark">₹0</div>
+              <div className="text-2xl font-bold text-brand-dark">₹{performance?.netEarnings.toLocaleString('en-IN') || '0'}</div>
             </div>
           </div>
 

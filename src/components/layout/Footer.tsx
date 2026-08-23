@@ -48,6 +48,7 @@ export default function Footer() {
               <li><Link to="/about" className="text-sm text-gray-500 hover:text-brand-accent transition-colors duration-200">Contact</Link></li>
               <li><Link to="/about" className="text-sm text-gray-500 hover:text-brand-accent transition-colors duration-200">Privacy Policy</Link></li>
               <li><Link to="/about" className="text-sm text-gray-500 hover:text-brand-accent transition-colors duration-200">Terms of Service</Link></li>
+              <li><Link to="/admin/login" className="text-sm text-gray-500 hover:text-brand-accent transition-colors duration-200">Admin Login</Link></li>
             </ul>
           </div>
         </div>
@@ -55,9 +56,6 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-gray-600">&copy; {new Date().getFullYear()} IchiHub. All rights reserved.</p>
-          <Link to="/admin/login" className="text-xs text-gray-600 hover:text-brand-accent transition-colors duration-200">
-            Admin Login
-          </Link>
         </div>
       </div>
     </footer>

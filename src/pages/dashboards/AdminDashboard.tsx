@@ -2,11 +2,23 @@ import { useAuth } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import { LogOut, Users, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { api } from '../../lib/api';
+
+interface AdminMetrics {
+  totalUsers: number; activeVendors: number; todaysBookings: number; completedToday: number; pendingBookings: number;
+  cancelledToday: number; grossRevenue: number; platformEarnings: number; openComplaints: number; pendingVerifications: number; activeServices: number;
+}
 
 export default function AdminDashboard() {
   const { logout } = useAuth();
   const { vendors, updateVendorStatus } = useDataStore();
   const navigate = useNavigate();
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+
+  useEffect(() => {
+    api<{ metrics: AdminMetrics }>('/admin/metrics').then((response) => setMetrics(response.metrics)).catch(() => setMetrics(null));
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -43,6 +55,20 @@ export default function AdminDashboard() {
         {/* Main Content */}
         <div className="w-full md:flex-1 min-w-0 space-y-6">
           <h1 className="text-2xl font-display font-bold text-brand-dark">Platform Administration</h1>
+
+          {metrics && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                ['Total Users', metrics.totalUsers], ['Active Vendors', metrics.activeVendors], ['Today\'s Bookings', metrics.todaysBookings], ['Completed Today', metrics.completedToday],
+                ['Open Complaints', metrics.openComplaints], ['Pending Verifications', metrics.pendingVerifications], ['Gross Revenue', `₹${metrics.grossRevenue.toLocaleString('en-IN')}`], ['Platform Earnings', `₹${metrics.platformEarnings.toLocaleString('en-IN')}`],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="card p-4">
+                  <p className="text-xs font-medium text-gray-500">{label}</p>
+                  <p className="mt-1 text-xl font-bold text-brand-dark">{value}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Pending Approvals */}
           <div className="card p-6">
