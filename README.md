@@ -3,10 +3,8 @@
 **IchiHub** is a full-stack, real-time marketplace platform that connects customers with verified service providers. It supports service discovery, bookings, vendor availability, live location tracking, reviews, payments, complaints, and administrative management.
 
 ## 📸 Screenshots
+<img width="1912" height="977" alt="image" src="https://github.com/user-attachments/assets/58390534-d1ae-42cc-af5c-558bc96ca405" />
 
-<!-- Add your project screenshots here -->
-
-![IchiHub](screenshots/home.png)
 
 ## ✨ Features
 
