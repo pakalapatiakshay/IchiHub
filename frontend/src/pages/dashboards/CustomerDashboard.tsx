@@ -1,12 +1,19 @@
 import { useAuth } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
-import { LogOut, Calendar, MapPin, Navigation } from 'lucide-react';
+import { LogOut, Calendar, MapPin, Navigation, CreditCard } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import PaymentModal from '../../components/payment/PaymentModal';
+import { useToastStore } from '../../store/toastStore';
 
 export default function CustomerDashboard() {
   const { user, logout } = useAuth();
-  const { bookings } = useDataStore();
+  const { bookings, vendors } = useDataStore();
+  const { addToast } = useToastStore();
   const navigate = useNavigate();
+  
+  const [activePaymentBooking, setActivePaymentBooking] = useState<string | null>(null);
+  const [paidBookings, setPaidBookings] = useState<Set<string>>(new Set());
 
   const handleLogout = () => {
     logout();
@@ -75,28 +82,36 @@ export default function CustomerDashboard() {
           {myBookings.length > 0 ? (
             <div className="space-y-4 stagger-children">
               {myBookings.map(booking => (
-                <div key={booking.id} className="card-hover p-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div key={booking.id || 'unknown'} className="card-hover p-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={statusColor[booking.status] || 'badge-dark'}>
-                        {statusLabel[booking.status] || booking.status.replace('_', ' ')}
+                      <span className={statusColor[booking.status || 'pending'] || 'badge-dark'}>
+                        {statusLabel[booking.status || 'pending'] || (booking.status || 'pending').replace('_', ' ')}
                       </span>
                       <span className="text-xs text-gray-400">{booking.date} at {booking.time}</span>
                     </div>
-                    <h3 className="font-bold text-brand-dark">{booking.service}</h3>
+                    <h3 className="font-bold text-brand-dark">{booking.service || 'Unknown Service'}</h3>
                     <p className="text-gray-500 text-xs mt-0.5">
                       <MapPin size={11} className="inline mr-1" />
-                      {booking.booking_address || booking.address}
+                      {booking.booking_address || booking.address || 'Location not specified'}
                     </p>
                   </div>
                   <div className="flex gap-2 self-start md:self-center">
-                    {trackableStatuses.includes(booking.status) && (
+                    {booking.status && trackableStatuses.includes(booking.status) && (
                       <Link
                         to={`/customer/bookings/${booking.id}/track`}
                         className="btn-primary btn-sm flex items-center gap-1.5"
                       >
                         <Navigation size={13} /> Track
                       </Link>
+                    )}
+                    {(booking.status === 'completed' || booking.status === 'pending') && !paidBookings.has(booking.id) && (
+                      <button
+                        onClick={() => setActivePaymentBooking(booking.id)}
+                        className="btn-primary btn-sm bg-green-500 hover:bg-green-600 text-white flex items-center gap-1.5 border-none"
+                      >
+                        <CreditCard size={13} /> Pay Now
+                      </button>
                     )}
                     <button className="btn-secondary btn-sm">
                       View Details
@@ -119,6 +134,32 @@ export default function CustomerDashboard() {
           )}
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {activePaymentBooking && (() => {
+        const booking = bookings.find(b => b.id === activePaymentBooking);
+        const provider = vendors.find(v => v.id === booking?.vendor_id);
+        if (!booking || !provider) return null;
+
+        return (
+          <PaymentModal
+            isOpen={!!activePaymentBooking}
+            onClose={() => setActivePaymentBooking(null)}
+            onSuccess={() => {
+              setPaidBookings(prev => {
+                const next = new Set(prev);
+                if (booking.id) next.add(booking.id);
+                return next;
+              });
+              addToast('Payment successful!', 'success');
+              setActivePaymentBooking(null);
+            }}
+            serviceName={booking.service || 'Service'}
+            providerName={provider.business_name || 'Provider'}
+            baseAmount={provider.starting_price || 0}
+          />
+        );
+      })()}
     </div>
   );
 }

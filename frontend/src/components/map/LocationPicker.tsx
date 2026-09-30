@@ -52,15 +52,6 @@ export default function LocationPicker({
     initialPosition || DEFAULT_CENTER
   );
 
-  const handleMapClick = useCallback(
-    (lat: number, lng: number) => {
-      setSelectedPos([lat, lng]);
-      // Reverse geocode
-      reverseGeocode(lat, lng);
-    },
-    []
-  );
-
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const res = await fetch(
@@ -74,6 +65,15 @@ export default function LocationPicker({
       setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
     }
   };
+
+  const handleMapClick = useCallback(
+    (lat: number, lng: number) => {
+      setSelectedPos([lat, lng]);
+      // Reverse geocode
+      reverseGeocode(lat, lng);
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;

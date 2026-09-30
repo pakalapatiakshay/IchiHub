@@ -5,7 +5,8 @@ import { useDataStore, calculateDistance, formatDistance } from '../store/dataSt
 import { useLocationStore } from '../store/locationStore';
 import { useToastStore } from '../store/toastStore';
 import LocationPicker from '../components/map/LocationPicker';
-import { ArrowLeft, MapPin, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, ChevronDown, ChevronUp, CreditCard, Clock } from 'lucide-react';
+import PaymentModal from '../components/payment/PaymentModal';
 
 const DEFAULT_LAT = 12.9716;
 const DEFAULT_LNG = 77.5946;
@@ -31,6 +32,10 @@ export default function BookService() {
   const [bookingLng, setBookingLng] = useState<number | null>(null);
   const [bookingAddress, setBookingAddress] = useState<string>('');
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  // Payment State
+  const [paymentTiming, setPaymentTiming] = useState<'now' | 'after'>('after');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   if (!provider) {
     return (
@@ -71,15 +76,14 @@ export default function BookService() {
     setShowLocationPicker(false);
   };
 
-  const handleBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBookingConfirm = async () => {
     const finalLat = bookingLat || customerLocation?.lat || DEFAULT_LAT;
     const finalLng = bookingLng || customerLocation?.lng || DEFAULT_LNG;
     const finalAddress = bookingAddress || `${finalLat.toFixed(4)}, ${finalLng.toFixed(4)}`;
 
     await addBooking({
       id: Math.random().toString(36).substr(2, 9),
-      customer_id: user.id,
+      customer_id: user!.id,
       vendor_id: provider.id,
       service: provider.category,
       date: formData.date,
@@ -94,6 +98,15 @@ export default function BookService() {
     });
     addToast(`Booking confirmed with ${provider.business_name}!`, 'success');
     navigate('/customer/dashboard');
+  };
+
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (paymentTiming === 'now') {
+      setShowPaymentModal(true);
+    } else {
+      handleBookingConfirm();
+    }
   };
 
   const effectiveLat = bookingLat || customerLocation?.lat || DEFAULT_LAT;
@@ -127,7 +140,7 @@ export default function BookService() {
           </div>
 
           {/* Booking Form */}
-          <form className="p-6 md:p-8" onSubmit={handleBooking}>
+          <form className="p-6 md:p-8" onSubmit={handleBookingSubmit}>
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -224,15 +237,53 @@ export default function BookService() {
                 ></textarea>
               </div>
 
+              {/* Payment Timing Selection */}
+              <div>
+                <label className="input-label mb-3">When would you like to pay?</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className={`flex items-start p-4 border rounded-2xl cursor-pointer transition-all ${paymentTiming === 'after' ? 'border-brand-accent bg-brand-accentLight' : 'border-gray-200 hover:bg-gray-50'}`}>
+                    <input type="radio" name="payment_timing" value="after" checked={paymentTiming === 'after'} onChange={() => setPaymentTiming('after')} className="hidden" />
+                    <div className="mt-0.5 mr-3 text-brand-accent">
+                      <Clock size={20} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">Pay After Service</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Pay when the job is completed</p>
+                    </div>
+                  </label>
+                  
+                  <label className={`flex items-start p-4 border rounded-2xl cursor-pointer transition-all ${paymentTiming === 'now' ? 'border-brand-accent bg-brand-accentLight' : 'border-gray-200 hover:bg-gray-50'}`}>
+                    <input type="radio" name="payment_timing" value="now" checked={paymentTiming === 'now'} onChange={() => setPaymentTiming('now')} className="hidden" />
+                    <div className="mt-0.5 mr-3 text-brand-accent">
+                      <CreditCard size={20} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">Pay Now</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Secure your booking upfront</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <div className="border-t border-brand-border pt-5">
                 <button type="submit" className="btn-primary btn-lg w-full">
-                  Confirm Booking
+                  {paymentTiming === 'now' ? 'Proceed to Payment' : 'Confirm Booking'}
                 </button>
               </div>
             </div>
           </form>
         </div>
       </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handleBookingConfirm}
+        serviceName={provider.category}
+        providerName={provider.business_name}
+        baseAmount={provider.starting_price}
+      />
     </div>
   );
 }
